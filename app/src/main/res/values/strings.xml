@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">See My Friends</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="facebook_app_id">1247615671980777</string>
+    <string name="friendlist">Look</string>
+    <string name="logout">Logout</string>
+</resources>

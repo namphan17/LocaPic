@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -18,9 +19,16 @@ import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.facebook.share.widget.ShareDialog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 
@@ -44,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         // Share diaglog
         shareDialog = new ShareDialog(this);
 
-        Profile profile = getCurrentProfile();
+        final Profile profile = getCurrentProfile();
         final AccessToken accessToken = getCurrentAccessToken();
 
         // Getting user information.
@@ -66,6 +74,48 @@ public class MainActivity extends AppCompatActivity {
 //                Intent friendListIntent = new Intent(MainActivity.this, FriendListActivity.class);
 //                startActivity(friendListIntent);
                 Toast.makeText(MainActivity.this, accessToken.toString(), Toast.LENGTH_LONG).show();
+                final String[] afterString = {""};
+                final boolean[] noData = {false};
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                StrictMode.setThreadPolicy(policy);
+                do {
+                    Bundle params = new Bundle();
+                    params.putString("fields", "friends");
+                    params.putString("after", afterString[0]);
+                /* make the API call */
+                    new GraphRequest(
+                            AccessToken.getCurrentAccessToken(),
+                            profile.getId(),
+                            params,
+                            HttpMethod.GET,
+                            new GraphRequest.Callback() {
+                                public void onCompleted(GraphResponse response) {
+                                /* handle the result */
+
+                                    try {
+                                        JSONObject jsonObject = response.getJSONObject().getJSONObject("friends");
+                                        JSONArray jsonArray = jsonObject.getJSONArray("data");
+
+                                        System.out.println("after: " + afterString[0]);
+                                        System.out.println(jsonArray.toString());
+
+
+                                        if (!jsonObject.isNull("paging")) {
+                                            JSONObject paging = jsonObject.getJSONObject("paging");
+                                            JSONObject cursors = paging.getJSONObject("cursors");
+                                            if (!cursors.isNull("after"))
+                                                afterString[0] = cursors.getString("after");
+                                            else
+                                                noData[0] = true;
+                                        } else
+                                            noData[0] = true;
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                    ).executeAndWait();
+                } while (!noData[0] == true);
             }
         });
 

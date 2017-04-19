@@ -16,6 +16,9 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LoginActivity extends AppCompatActivity {
 
     // Member variables that manage the facebook user.
@@ -25,6 +28,9 @@ public class LoginActivity extends AppCompatActivity {
 
     //Facebook login button
     private FacebookCallback<LoginResult> callback;
+
+    // Permission
+    List<String> mPermissions;
 
     // Helper methods that start the next activity and pass the data to it.
     private void nextActivity(Profile profile){
@@ -67,10 +73,8 @@ public class LoginActivity extends AppCompatActivity {
         callback = new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                AccessToken accessToken = loginResult.getAccessToken();
                 Profile profile = Profile.getCurrentProfile();
                 nextActivity(profile);
-                System.out.println("Profile: " + profile + " and " + "AccessToken: " + accessToken);
             }
 
             @Override
@@ -82,9 +86,12 @@ public class LoginActivity extends AppCompatActivity {
                 System.out.println(e);
             }
         };
-        loginButton.setReadPermissions("user_friends");
+        mPermissions = new ArrayList<>();
+        mPermissions.add("user_photos");
+
+        loginButton.setReadPermissions(mPermissions);
         loginButton.registerCallback(callbackManager, callback);
-//        System.out.println("callback registered!!!");                                   // Debugging
+        //System.out.println("callback registered!!!");                                   // Debugging
     }
 
     @Override

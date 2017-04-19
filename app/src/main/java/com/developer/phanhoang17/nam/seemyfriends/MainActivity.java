@@ -3,6 +3,7 @@ package com.developer.phanhoang17.nam.seemyfriends;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -36,6 +37,8 @@ import static com.facebook.AccessToken.getCurrentAccessToken;
 import static com.facebook.Profile.getCurrentProfile;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity_Friend";
 
     private ShareDialog shareDialog;
     private TextView mNameTextView;
@@ -73,49 +76,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 //                Intent friendListIntent = new Intent(MainActivity.this, FriendListActivity.class);
 //                startActivity(friendListIntent);
-                Toast.makeText(MainActivity.this, accessToken.toString(), Toast.LENGTH_LONG).show();
-                final String[] afterString = {""};
-                final boolean[] noData = {false};
-                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                StrictMode.setThreadPolicy(policy);
-                do {
-                    Bundle params = new Bundle();
-                    params.putString("fields", "friends");
-                    params.putString("after", afterString[0]);
-                /* make the API call */
-                    new GraphRequest(
-                            AccessToken.getCurrentAccessToken(),
-                            profile.getId(),
-                            params,
-                            HttpMethod.GET,
-                            new GraphRequest.Callback() {
-                                public void onCompleted(GraphResponse response) {
-                                /* handle the result */
-
-                                    try {
-                                        JSONObject jsonObject = response.getJSONObject().getJSONObject("friends");
-                                        JSONArray jsonArray = jsonObject.getJSONArray("data");
-
-                                        System.out.println("after: " + afterString[0]);
-                                        System.out.println(jsonArray.toString());
-
-
-                                        if (!jsonObject.isNull("paging")) {
-                                            JSONObject paging = jsonObject.getJSONObject("paging");
-                                            JSONObject cursors = paging.getJSONObject("cursors");
-                                            if (!cursors.isNull("after"))
-                                                afterString[0] = cursors.getString("after");
-                                            else
-                                                noData[0] = true;
-                                        } else
-                                            noData[0] = true;
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                    ).executeAndWait();
-                } while (!noData[0] == true);
+                Toast.makeText(MainActivity.this, accessToken.getToken()+"NamHuong", Toast.LENGTH_LONG).show();
+                new FetchInfoTask().execute(profile);
             }
         });
 
@@ -153,6 +115,93 @@ public class MainActivity extends AppCompatActivity {
 
         protected void onPostExecute(Bitmap result) {
             bmImage.setImageBitmap(result);
+        }
+    }
+
+    public class FetchInfoTask extends AsyncTask<Profile, Void, Void> {
+        @Override
+        protected Void doInBackground(Profile... profile) {
+
+            Log.i(TAG, "Executing in backgroud!!!");
+
+            Profile myProfile = profile[0];
+            final String[] afterString = {""};
+            final boolean[] noData = {false};
+
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "id, place, tags");
+            GraphRequest request = new GraphRequest(
+                    AccessToken.getCurrentAccessToken(),
+                    "/me/photos",
+                    parameters,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        public void onCompleted(
+                                GraphResponse response) {
+                            // Application code
+//                            System.out.println("HERE: " + response.getJSONObject().toString());
+                            try {
+                                JSONObject jsonResponse = response.getJSONObject();
+                                JSONArray jsonData = jsonResponse.getJSONArray("data");
+                                System.out.println("Data Length: " + jsonData.length());
+                                JSONObject item = (JSONObject) jsonData.get(24);
+                                System.out.println("Last item: " + item.toString());
+                            } catch (JSONException e){
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+
+            request.executeAsync();
+//            do {
+//                Bundle param = new Bundle();
+//                param.putString("fields", "photos");
+////                param.putString("next", afterString[0]);
+//
+////                System.out.println("Checking No Data before request: " + noData[0]);
+//
+//                /* make the API call */
+//                new GraphRequest(
+//                        AccessToken.getCurrentAccessToken(),
+//                        myProfile.getId(),
+//                        param,
+//                        HttpMethod.GET,
+//                        new GraphRequest.Callback() {
+//                            public void onCompleted(GraphResponse response) {
+//                                /* handle the result */
+//
+//                                try {
+//                                    System.out.println(response.getJSONObject().toString());
+//                                    JSONObject jsonObject = response.getJSONObject().getJSONObject("photos");
+//                                    JSONArray jsonArray = jsonObject.getJSONArray("data");
+//
+//                                    System.out.println("JSON data length: " + jsonArray.length());
+////                                    System.out.println(response.toString());
+//
+//                                    if (!jsonObject.isNull("paging")) {
+//                                        JSONObject paging = jsonObject.getJSONObject("paging");
+//                                        JSONObject cursors = paging.getJSONObject("cursors");
+//
+//                                        System.out.println("Has next: " + !cursors.isNull("next"));
+//
+//                                        if (!cursors.isNull("next"))
+//                                            afterString[0] = cursors.getString("next");
+//                                        else
+//                                            noData[0] = true;
+//                                    } else {
+//                                        noData[0] = true;
+//                                    }
+//
+//                                    System.out.println("No data: " + noData[0]);
+//                                } catch (JSONException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }
+//                ).executeAndWait();
+//            } while (!noData[0] == true);
+            return null;
         }
     }
 

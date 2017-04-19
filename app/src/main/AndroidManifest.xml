@@ -34,7 +34,7 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             />
-        <provider android:authorities="com.facebook.app.FacebookContentProvider"
+        <provider android:authorities="com.facebook.app.FacebookContentProvider1247615671980777"
             android:name="com.facebook.FacebookContentProvider"
             android:exported="true"/>
     </application>

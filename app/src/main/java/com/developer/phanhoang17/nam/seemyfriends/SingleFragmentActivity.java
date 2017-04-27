@@ -5,16 +5,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
+import com.facebook.FacebookSdk;
+
 /**
  * Created by Ngoc Nguyen account on 2/23/2017.
  */
 
-public abstract class SingleFragmentActivity extends FragmentActivity {
+public abstract class SingleFragmentActivity extends android.support.v4.app.FragmentActivity {
 
     protected abstract Fragment createFragment();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment);
 
@@ -24,7 +28,7 @@ public abstract class SingleFragmentActivity extends FragmentActivity {
         if (fragment == null) {
             fragment = createFragment();
             fm.beginTransaction()
-                    .add(R.id.fragment_container, fragment)
+                    .add(R.id.profile_fragment_container, fragment)
                     .commit();
         }
     }

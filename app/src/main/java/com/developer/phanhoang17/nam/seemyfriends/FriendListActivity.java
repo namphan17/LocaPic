@@ -10,6 +10,6 @@ public class FriendListActivity extends SingleFragmentActivity {
 
     @Override
     protected Fragment createFragment() {
-        return new FriendListFragment();
+        return new ProfileFragment();
     }
 }

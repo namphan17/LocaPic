@@ -35,12 +35,8 @@ public class LoginActivity extends AppCompatActivity {
     // Helper methods that start the next activity and pass the data to it.
     private void nextActivity(Profile profile){
         if(profile != null){
-            Intent main = new Intent(LoginActivity.this, MainActivity.class);
-
-            main.putExtra("name", profile.getFirstName());
-            main.putExtra("surname", profile.getLastName());
-            main.putExtra("imageUrl", profile.getProfilePictureUri(200,200).toString());
-            startActivity(main);
+            Intent intent = MainActivity.newIntent(this, profile);
+            startActivity(intent);
         }
     }
 

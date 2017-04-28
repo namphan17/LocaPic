@@ -1,4 +1,4 @@
-package com.developer.phanhoang17.nam.seemyfriends;
+package com.developer.phanhoang17.nam.seemyfriends.Models;
 
 /**
  * Created by Ngoc Nguyen account on 4/21/2017.
@@ -33,16 +33,16 @@ public class Photo {
         this.mPlace = mPlace;
     }
 
-    public String[] getUrls() {
+    public String getUrls() {
         return mUrls;
     }
 
-    public void setUrls(String[] mUrls) {
+    public void setUrls(String mUrls) {
         this.mUrls = mUrls;
     }
 
     private String mPlace;
-    private String[] mUrls;
+    private String mUrls;
 
     public Photo(String id) {
         mId = id;

@@ -1,6 +1,6 @@
 package com.developer.phanhoang17.nam.seemyfriends;
 
-import android.os.AsyncTask;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -9,18 +9,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.developer.phanhoang17.nam.seemyfriends.Models.Photo;
 import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
 import com.facebook.Profile;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +29,7 @@ public class PhotoFragment extends Fragment {
     private static final String TAG = "PhotoFragment_Nam";
     private RecyclerView mPhotoRecyclerView;
     private List<Photo> mItems = new ArrayList<>();
+    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
     private Profile mProfile;
     private AccessToken mAccessToken;
@@ -45,16 +40,17 @@ public class PhotoFragment extends Fragment {
 
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
-        private TextView mIdTextView;
+        private ImageView mPhotoItemView;
 
         public PhotoHolder(View itemView) {
             super(itemView);
 
-            mIdTextView = (TextView) itemView;
+            mPhotoItemView = (ImageView) itemView
+                    .findViewById(R.id.fragment_photo_image_view);
         }
 
-        public void bindPhotoItem(Photo item) {
-            mIdTextView.setText(item.toString());
+        public void bindDrawable(Drawable drawable) {
+            mPhotoItemView.setImageDrawable(drawable);
         }
     }
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
@@ -65,13 +61,15 @@ public class PhotoFragment extends Fragment {
         }
         @Override
         public PhotoHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-            TextView textView = new TextView(getActivity());
-            return new PhotoHolder(textView);
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
+            View view = inflater.inflate(R.layout.photo_item, viewGroup, false);
+            return new PhotoHolder(view);
         }
         @Override
         public void onBindViewHolder(PhotoHolder photoHolder, int position) {
             Photo photoItem = mPhotoItems.get(position);
-            photoHolder.bindPhotoItem(photoItem);
+            photoHolder.bindDrawable(getResources().getDrawable(R.drawable.em_yeu));
+            mThumbnailDownloader.queueThumbnail(photoHolder, photoItem.getUrls());
         }
         @Override
         public int getItemCount() {
@@ -79,13 +77,23 @@ public class PhotoFragment extends Fragment {
         }
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         mAccessToken = getCurrentAccessToken();
+        AccessToken[] params = new AccessToken[1];
+        params[0] = mAccessToken;
         Toast.makeText(getContext(), mAccessToken + "NamHuong", Toast.LENGTH_LONG).show();
-        new FetchPhotoTask().execute();
+        Log.i(TAG, "Before running Async; AccessToken: " + mAccessToken);
+        mItems = new PhotoFetch().makeGraphRequest(mAccessToken);
+        Log.i(TAG, "Number of photos: " + mItems.size());
+
+        mThumbnailDownloader = new ThumbnailDownloader<>();
+        mThumbnailDownloader.start();
+        mThumbnailDownloader.getLooper();
+        Log.i(TAG, "Background thread has started!");
     }
 
     @Override
@@ -102,25 +110,16 @@ public class PhotoFragment extends Fragment {
         return v;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mThumbnailDownloader.quit();
+        Log.i(TAG, "Background thread destroyed!");
+    }
+
     private void setupAdapter() {
         if (isAdded()) {
             mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
-        }
-    }
-
-    private class FetchPhotoTask extends AsyncTask<Void, Void, List<Photo>> {
-        @Override
-        protected List<Photo> doInBackground(Void... params) {
-
-            Log.i(TAG, "Executing in backgroud!!!");
-            return new PhotoFetch().makeGraphRequest(mAccessToken);
-        }
-
-        @Override
-        protected void onPostExecute(List<Photo> items) {
-            mItems = items;
-            Log.i(TAG, "Setting up Adapter!!!");
-            setupAdapter();
         }
     }
 }

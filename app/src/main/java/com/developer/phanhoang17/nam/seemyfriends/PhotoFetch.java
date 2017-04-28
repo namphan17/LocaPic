@@ -3,6 +3,7 @@ package com.developer.phanhoang17.nam.seemyfriends;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.developer.phanhoang17.nam.seemyfriends.Models.Photo;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
@@ -16,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.facebook.AccessToken.getCurrentAccessToken;
+import static com.facebook.GraphRequest.TAG;
 
 /**
  * Created by Ngoc Nguyen account on 4/21/2017.
@@ -31,7 +32,7 @@ public class PhotoFetch {
 
         Bundle parameters = new Bundle();
         parameters.putString("fields", "id, place, tags, likes, images");
-        GraphRequest request = new GraphRequest(
+        final GraphRequest request = new GraphRequest(
                 accessToken,
                 "/me/photos",
                 parameters,
@@ -40,12 +41,13 @@ public class PhotoFetch {
                     public void onCompleted(
                             GraphResponse response) {
                         // Application code
-//                            System.out.println("HERE: " + response.getJSONObject().toString());
                         try {
                             JSONObject jsonResponse = response.getJSONObject();
                             JSONArray jsonData = jsonResponse.getJSONArray("data");
                             Log.i("PhotoFetch.java", "DataLength:" + jsonData.length());
+                            Log.i(TAG, jsonData.toString());
                             parsePhotos(photos, jsonData);
+                            Log.i(TAG, "Photos fetched: " + photos.size());
                         } catch (JSONException e) {
                             e.printStackTrace();
                         } catch(IOException e) {
@@ -53,7 +55,19 @@ public class PhotoFetch {
                         }
                     }
                 });
-        request.executeAsync();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                GraphResponse gResponse = request.executeAndWait();
+            }
+        });
+        t.start();
+        try {
+            t.join();
+        }  catch(InterruptedException e) {
+            e.printStackTrace();;
+        }
+        Log.i(TAG, "Photos fetched after the graph request: " + photos.size());
         return photos;
     }
 
@@ -69,6 +83,12 @@ public class PhotoFetch {
                     tags[j] = tagData.getJSONObject(j).getString("name");
                 }
                 photoItem.setTags(tags);
+            }
+            if (photoJsonObject.has("images")) {
+                JSONArray imageUrls = photoJsonObject.getJSONArray("images");
+                JSONObject imageData = (JSONObject) imageUrls.get(0);
+                String imageUrl = imageData.getString("source");
+                photoItem.setUrls(imageUrl);
             }
             photos.add(photoItem);
         }

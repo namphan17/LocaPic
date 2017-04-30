@@ -27,38 +27,57 @@ public class PhotoFetch {
     final String[] afterString = {""};
     final boolean[] noData = {false};
 
+
     public List<Photo> makeGraphRequest(AccessToken accessToken) {
         final List<Photo> photos = new ArrayList<>();
-
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "id, place, tags, likes, images");
-        final GraphRequest request = new GraphRequest(
-                accessToken,
-                "/me/photos",
-                parameters,
-                HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    public void onCompleted(
-                            GraphResponse response) {
-                        // Application code
-                        try {
-                            JSONObject jsonResponse = response.getJSONObject();
-                            JSONArray jsonData = jsonResponse.getJSONArray("data");
-                            Log.i("PhotoFetch.java", "DataLength:" + jsonData.length());
-                            Log.i(TAG, jsonData.toString());
-                            parsePhotos(photos, jsonData);
-                            Log.i(TAG, "Photos fetched: " + photos.size());
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        } catch(IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+        final AccessToken mAccessToken = accessToken;
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                GraphResponse gResponse = request.executeAndWait();
+                final String[] afterString = {""};  // will contain the next page cursor
+                final Boolean[] noData = {false};   // stop when there is no after cursor
+                final int[] count = {0};
+                do {
+                    count[0]++;
+                    Bundle parameters = new Bundle();
+                    parameters.putString("fields", "photos{id, place, tags, likes.summary(true), images}");
+                    final GraphRequest request =
+                            new GraphRequest(
+                                    mAccessToken,
+                                    "/me",
+                                    parameters,
+                                    HttpMethod.GET,
+                                    new GraphRequest.Callback() {
+                                        public void onCompleted(
+                                                GraphResponse response) {
+                                            // Application code
+                                            try {
+                                                JSONObject jsonResponse = response.getJSONObject().getJSONObject("photos");
+                                                JSONArray jsonData = jsonResponse.getJSONArray("data");
+                                                parsePhotos(photos, jsonData, mAccessToken);
+
+                                                if (jsonResponse.has("paging")) {
+                                                    JSONObject paging = jsonResponse.getJSONObject("paging");
+                                                    JSONObject cursors = paging.getJSONObject("cursors");
+                                                    if(!cursors.isNull("after")){
+                                                        afterString[0] = cursors.getString("after");
+                                                    } else {
+                                                        noData[0] = true;
+                                                    }
+                                                } else {
+                                                    noData[0] = true;
+                                                }
+                                                Log.i("PhotoFetch.java", "Fetching the " + count[0] +
+                                                        " page of photos; noData[0] = " + noData[0]);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+                    request.executeAndWait();
+                } while(count[0] < 2);
             }
         });
         t.start();
@@ -71,11 +90,15 @@ public class PhotoFetch {
         return photos;
     }
 
-    private void parsePhotos(List<Photo> photos,JSONArray jsonData)
+    private void parsePhotos(List<Photo> photos,JSONArray jsonData, AccessToken accessToken)
             throws IOException, JSONException {
         for (int i = 0; i < jsonData.length(); i++) {
             JSONObject photoJsonObject = jsonData.getJSONObject(i);
             Photo photoItem = new Photo(photoJsonObject.getString("id"));
+            photoItem.setLikes(photoJsonObject.getJSONObject("likes")
+                    .getJSONObject("summary")
+                    .getInt("total_count"));
+
             if (photoJsonObject.has("tags")) {
                 JSONArray tagData = photoJsonObject.getJSONObject("tags").getJSONArray("data");
                 String[] tags = new String[tagData.length()];

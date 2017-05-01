@@ -77,7 +77,7 @@ public class PhotoFetch {
                                         }
                                     });
                     request.executeAndWait();
-                } while(count[0] < 2);
+                } while(count[0] < 1);
             }
         });
         t.start();

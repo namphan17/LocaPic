@@ -34,7 +34,13 @@ public class PhotoFragment extends Fragment {
     private List<Photo> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
-    private Profile mProfile;
+    // Caching variables
+//    private DiskLruCache mDiskLruCache;
+    private final Object mDiskCacheLock = new Object();
+    private boolean mDiskCacheStarting = true;
+    private static final int DISK_CACHE_SIZE = 1024 * 1024 * 10; // 10MB
+    private static final String DISK_CACHE_SUBDIR = "thumbnails";
+
     private AccessToken mAccessToken;
 
     public static PhotoFragment newInstance() {

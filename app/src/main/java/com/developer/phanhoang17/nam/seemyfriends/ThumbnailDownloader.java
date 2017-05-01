@@ -91,6 +91,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
                     mRequestMap.remove(target);
                     mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
+                    Log.i("ThumbnailDownloader", "Binding drawable!");
                 }
             });
         } catch (IOException ioe) {

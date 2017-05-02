@@ -47,7 +47,7 @@ public class ProfileFragment extends Fragment {
 
     private Button mLogoutButton;
     private Button mPhotoButton;
-
+    private Button mLocationButton;
 
     public static ProfileFragment newInstance(String firstName, String lastName, String picUrl) {
         Bundle args = new Bundle();
@@ -95,6 +95,14 @@ public class ProfileFragment extends Fragment {
             public void onClick(View view) {
                 Intent intent = PhotoActivity.newIntent(getContext());
                 startActivity(intent);
+            }
+        });
+
+        mLocationButton = (Button) view.findViewById(R.id.location_button);
+        mLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getActivity(), "Give me the location", Toast.LENGTH_LONG).show();
             }
         });
 

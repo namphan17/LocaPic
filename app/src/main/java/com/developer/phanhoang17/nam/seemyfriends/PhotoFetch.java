@@ -34,50 +34,61 @@ public class PhotoFetch {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                final String[] afterString = {""};  // will contain the next page cursor
-                final Boolean[] noData = {false};   // stop when there is no after cursor
                 final int[] count = {0};
-                do {
                     count[0]++;
                     Bundle parameters = new Bundle();
-                    parameters.putString("fields", "photos{id, place, tags, likes.summary(true), images}");
-                    final GraphRequest request =
-                            new GraphRequest(
-                                    mAccessToken,
-                                    "/me",
-                                    parameters,
-                                    HttpMethod.GET,
-                                    new GraphRequest.Callback() {
-                                        public void onCompleted(
-                                                GraphResponse response) {
-                                            // Application code
-                                            try {
-                                                JSONObject jsonResponse = response.getJSONObject().getJSONObject("photos");
-                                                JSONArray jsonData = jsonResponse.getJSONArray("data");
-                                                parsePhotos(photos, jsonData, mAccessToken);
+                    parameters.putString("fields", "photos.limit(60){id, place, tags, likes.summary(true), images}");
+                    // GraphRequest used to be final
+                    final GraphRequest.Callback graphCallback = new GraphRequest.Callback() {
+                    public void onCompleted(
+                            GraphResponse response) {
+                        // Application code
+                        try {
+                            Log.i("PhotoFetch.java", "Response: " + response.toString());
+                            JSONObject jsonResponse = response.getJSONObject().getJSONObject("photos");
+                            JSONArray jsonData = jsonResponse.getJSONArray("data");
+                            parsePhotos(photos, jsonData, mAccessToken);
 
                                                 if (jsonResponse.has("paging")) {
                                                     JSONObject paging = jsonResponse.getJSONObject("paging");
                                                     JSONObject cursors = paging.getJSONObject("cursors");
                                                     if(!cursors.isNull("after")){
-                                                        afterString[0] = cursors.getString("after");
-                                                    } else {
-                                                        noData[0] = true;
+                                                        Log.i("PhotoFetch.java", "After string = " + cursors.getString("after"));
                                                     }
-                                                } else {
-                                                    noData[0] = true;
+//                                                    else {
+//                                                        noData[0] = true;
+//                                                    }
                                                 }
+//                                                else {
+//                                                    noData[0] = true;
+//                                                }
                                                 Log.i("PhotoFetch.java", "Fetching the " + count[0] +
                                                         " page of photos; noData[0] = " + noData[0]);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    });
-                    request.executeAndWait();
-                } while(count[0] < 1);
+                            GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.PREVIOUS);
+                            Log.i("PhotoFetch.java", "Has next request: " + (nextRequest!=null));
+                            if (nextRequest != null) {
+                                Bundle parameters = new Bundle();
+                                parameters.putString("fields", "photos{id, place, tags, likes.summary(true), images}");
+                                nextRequest.setParameters(parameters);
+                                nextRequest.setGraphPath("/me");
+                                if (count[0] < 2 && nextRequest != null) {
+                                    count[0]++;
+                                    nextRequest.setCallback(this);
+                                    nextRequest.executeAndWait();
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                new GraphRequest(mAccessToken,
+                                    "/me",
+                                    parameters,
+                                    HttpMethod.GET,
+                                    graphCallback).executeAndWait();
             }
         });
         t.start();

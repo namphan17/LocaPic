@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">See My Friends</string>
+    <string name="app_name">LocaPic</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="facebook_app_id">1247615671980777</string>
     <string name="photo">Look</string>
-    <string name="logout">Logout</string>
+    <string name="logout">Log out</string>
     <string name="title_activity_maps">Map</string>
 </resources>

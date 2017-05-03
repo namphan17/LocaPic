@@ -1,4 +1,4 @@
-package com.developer.phanhoang17.nam.seemyfriends;
+package com.developer.phanhoang17.nam.seemyfriends.NetworkUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

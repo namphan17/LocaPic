@@ -1,11 +1,8 @@
 package com.developer.phanhoang17.nam.seemyfriends;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,11 +14,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.developer.phanhoang17.nam.seemyfriends.Models.Photo;
+import com.developer.phanhoang17.nam.seemyfriends.NetworkUtils.PhotoFetch;
 import com.facebook.AccessToken;
-import com.facebook.Profile;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;

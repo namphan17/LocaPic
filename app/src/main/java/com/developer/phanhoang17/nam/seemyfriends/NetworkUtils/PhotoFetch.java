@@ -1,4 +1,4 @@
-package com.developer.phanhoang17.nam.seemyfriends;
+package com.developer.phanhoang17.nam.seemyfriends.NetworkUtils;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -37,7 +37,7 @@ public class PhotoFetch {
                 final int[] count = {0};
                     count[0]++;
                     Bundle parameters = new Bundle();
-                    parameters.putString("fields", "photos.limit(60){id, place, tags, likes.summary(true), images}");
+                    parameters.putString("fields", "photos.limit(100).summary(true){id, place, tags, likes.summary(true), images}");
                     // GraphRequest used to be final
                     final GraphRequest.Callback graphCallback = new GraphRequest.Callback() {
                     public void onCompleted(
